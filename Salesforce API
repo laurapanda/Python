@@ -1,0 +1,105 @@
+##############################################################################
+### Getting all existing accounts and contacts from salesforce
+##############################################################################
+
+# Libraries
+from simple_salesforce import Salesforce
+from pandas import DataFrame
+import pandas as pd
+
+# Gaining access to Salesforce
+sf = Salesforce(password= password ,
+                username= username,
+                security_token = token,
+                instance_url = instance)
+
+
+
+# making a query in salesforce
+
+# Function for making queries in Salesforce that pulls more than 2000 records
+
+# creating an empty DataFrame in which the records are going to be safed in
+df = pd.DataFrame()
+
+def myQuery(SOQL):
+
+    "Create DataFrame of the JSON file that is pulled from Salesforce."
+
+    global df
+
+    qryResult = sf.query(SOQL)
+    print('Record Count {0}'.format(qryResult['totalSize']))
+
+    isDone = qryResult['done'];
+
+    if isDone == True:
+        df = DataFrame(qryResult['records'])
+
+    while isDone != True:
+        try:
+            if qryResult['done'] != True:
+                df = df.append(DataFrame(qryResult['records']))
+                qryResult = sf.query_more(qryResult['nextRecordsUrl'], True)
+            else:
+                df = df.append(DataFrame(qryResult['records']))
+                isDone = True;
+                print('Run complete.')
+        except NameError:
+            df = DataFrame(qryResult['records'])
+            qryResult = sf.query_more(qryResult['nextRecordsUrl'], True)
+
+    df = df.drop('attributes', axis = 1);
+
+
+
+
+### Contacts ###
+
+# Query Id, First and Last Name, DoNotCall, Email, and account name for all the contacts in Salesforce
+
+SOQL_contacts = "SELECT Id,FirstName, LastName, DoNotCall, Email, Account.Name FROM Contact"
+
+myQuery(SOQL_contacts)
+
+contacts = df.copy()
+
+
+# replacing the dictionary for the account name (Java) with just the account name
+
+# setting how many iterations
+x = len(contacts.index) - 1
+
+c_1 = contacts['Account']
+items = list(c_1.items())
+
+while x >= 0:
+
+    try:
+        item_1 = items[x][1]
+        item_1 = list(item_1.items())
+        #print(item_1[1][1])
+        print(x)
+        contacts['Account'].iloc[x] = item_1[1][1]
+        x = x-1
+
+    except:
+        contacts['Account'].iloc[x] = 'No Account'
+        x = x-1
+
+
+
+### Accounts ###
+
+# emptying the dataframe
+
+df = pd.DataFrame()
+
+# Query Id, Name and DoNotCall for all the accounts in Salesforce
+
+SOQL_accounts = "SELECT Id,Name, A_Do_Not_Call__c FROM Account"
+
+myQuery(SOQL_accounts)
+
+accounts = df.copy()
+
