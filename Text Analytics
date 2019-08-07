@@ -1,0 +1,145 @@
+
+####################################################################
+###   Creating a fuzzy match using levenshtein ratio to          ###
+###     see if there is a match for the organization in          ###
+###         the existing account from salesforce                 ###
+####################################################################
+
+# Libraries
+from simple_salesforce import Salesforce
+import pandas as pd
+from fuzzywuzzy import process
+
+
+print("Does the organization already exist as an account in Salesforce?")
+input('< Press enter to continue >\n')
+print('\f')
+
+
+for i in new_profiles.index:
+
+    """ Searching for matches of the organization in Salesforce """
+
+
+    # Matching the Organization name with account names
+    str2Match = new_profiles['Organization 1'].iloc[i]
+    strOptions = accounts['Name']
+    a_matches = DataFrame(process.extract(str2Match,strOptions))
+
+    if a_matches[1].iloc[0] < 90:
+        # Create a new profile for account that are not existing in Salesforce
+
+        new_profiles['account_created'].iloc[i] = 1
+        
+        sf.Account.create({'Name': new_profiles['Organization 1'].iloc[i] ,
+                           'CurrencyIsoCode': new_profiles['Currency'].iloc[i],
+                           'Shipping_Country__c': new_profiles['Country'].iloc[i],
+                           'Shipping_Region__c': new_profiles['Region'].iloc[i] }) 
+
+    elif a_matches[1].iloc[0] == 100:
+        # Don't create a new profile for accounts that are existing in Salesforce
+
+        new_profiles['account_created'].iloc[i] = 0
+
+    else:
+        # Check if there might be a misspelling and the account might match with an existing
+
+        print('\f')
+        print("\nAccount", i+1)
+        print(new_profiles['Organization 1'].iloc[i])
+
+        print ("""\n
+Did you mean of of these?
+If yes please enter row number, if not please press enter to continue :\n""")
+        print(a_matches)
+
+        answer_1 = input("Enter row number or press enter to skip:")
+
+        if '0' in answer_1:
+            # updating the account name
+            new_profiles['Organization 1'].iloc[i] = a_matches[0].iloc[0]
+            new_profiles['account_created'].iloc[i] = 0
+
+        elif '1' in answer_1:
+            # updating the account name
+            new_profiles['Organization 1'].iloc[i] = a_matches[0].iloc[1]
+            new_profiles['account_created'].iloc[i] = 0
+
+        elif '2' in answer_1:
+            # updating the account name
+            new_profiles['Organization 1'].iloc[i] = a_matches[0].iloc[2]
+            new_profiles['account_created'].iloc[i] = 0
+
+        elif '3' in answer_1:
+            # updating the account name
+            new_profiles['Organization 1'].iloc[i] = a_matches[0].iloc[3]
+            new_profiles['account_created'].iloc[i] = 0
+
+        elif '4' in answer_1:
+            # updating the account name
+            new_profiles['Organization 1'].iloc[i] = a_matches[0].iloc[3]
+            new_profiles['account_created'].iloc[i] = 0
+
+        else:
+            new_profiles['account_created'].iloc[i] = 1
+            
+            sf.Account.create({'Name': new_profiles['Organization 1'].iloc[i] ,
+                           'CurrencyIsoCode': new_profiles['Currency'].iloc[i],
+                           'Shipping_Country__c': new_profiles['Country'].iloc[i],
+                           'Shipping_Region__c': new_profiles['Region'].iloc[i] }) 
+
+        print('\f')
+
+
+
+
+
+###############################################################################################
+###############################################################################################
+
+""""
+Fuzzy Match Sources:
+    https://www.datacamp.com/community/tutorials/fuzzy-string-python
+"""
+
+
+# Example to match two strings
+from fuzzywuzzy import fuzz
+Str1 = "The supreme court case of Nixon vs The United States"
+Str2 = "Nixon v. United States"
+Ratio = fuzz.ratio(Str1.lower(),Str2.lower())
+Partial_Ratio = fuzz.partial_ratio(Str1.lower(),Str2.lower())
+Token_Sort_Ratio = fuzz.token_sort_ratio(Str1,Str2)
+Token_Set_Ratio = fuzz.token_set_ratio(Str1,Str2)
+print(Ratio)
+print(Partial_Ratio)
+print(Token_Sort_Ratio)
+print(Token_Set_Ratio)
+
+
+# Example to match a string to a list of strings
+from fuzzywuzzy import process
+str2Match = "apple inc"
+strOptions = ["Apple Inc.","apple park","apple incorporated","iphone"]
+Ratios = process.extract(str2Match,strOptions)
+print(Ratios)
+# You can also select the string with the highest matching percentage
+highest = process.extractOne(str2Match,strOptions)
+print(highest)
+
+# Find a fuzzy match of an input to names in a list
+str2Match = input("What's the name of the organisation? \nName:")
+strOptions = accounts['Name']
+matches = process.extract(str2Match,strOptions)
+#print("\nI found following matches to your seach:\n")
+top_matches = []
+for item in matches: 
+    if item[1] >= 75:
+        #top_matches = top_matches.append(item)
+        print(item)
+#print(top_matches)
+
+print(matches)
+matches = DataFrame(matches)
+print(matches)
+print(matches[1])
